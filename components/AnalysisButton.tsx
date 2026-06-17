@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { cn } from '@/components/ui'
 
 interface Props {
   permitId: string
@@ -33,20 +34,27 @@ export function AnalysisButton({ permitId, lastAnalyzedAt }: Props) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {hasRun && (
-        <p className="text-xs text-gray-500">
+        <p className="text-sm font-medium text-slate-500">
           Last analyzed: {new Date(lastAnalyzedAt).toLocaleString()}
         </p>
       )}
       <button
         onClick={handleClick}
         disabled={pending}
-        className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        className={cn(
+          'inline-flex min-h-11 items-center justify-center rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm shadow-blue-900/10 transition hover:bg-blue-700',
+          'disabled:cursor-not-allowed disabled:opacity-60'
+        )}
       >
         {pending ? 'Analyzing…' : hasRun ? 'Re-Run Analysis' : 'Run AI Retrofit Analysis'}
       </button>
-      {error && <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && (
+        <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

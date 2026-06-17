@@ -1,5 +1,12 @@
 import Link from "next/link";
 import { listPermits } from "@/lib/permits";
+import {
+  DataPanel,
+  EmptyState,
+  PageHeader,
+  PermitStatusBadge,
+  PrimaryLink,
+} from "@/components/ui";
 
 export const dynamic = "force-dynamic";
 
@@ -7,54 +14,76 @@ export default async function PermitsPage() {
   const permits = await listPermits();
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold tracking-tight">Permits</h1>
-        <Link
-          href="/upload"
-          className="rounded-md bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-        >
-          Upload permit
-        </Link>
-      </div>
+    <main className="app-page">
+      <PageHeader
+        eyebrow="Permits"
+        title="Historical Permit Records"
+        description="Uploaded documents, extraction status, storage keys, and analysis readiness in one inspection queue."
+        actions={<PrimaryLink href="/upload">Upload Documents</PrimaryLink>}
+      />
 
-      {permits.length === 0 ? (
-        <div className="mt-12 rounded-lg border border-dashed border-gray-300 p-12 text-center dark:border-gray-700">
-          <p className="text-sm text-gray-600 dark:text-gray-400">No permits uploaded yet.</p>
-          <Link
-            href="/upload"
-            className="mt-4 inline-block text-sm font-medium underline"
+      <div className="mt-8">
+        {permits.length === 0 ? (
+          <EmptyState
+            title="No permits uploaded"
+            description="Upload a permit PDF to create a building dashboard and start the analysis workflow."
+            action={<PrimaryLink href="/upload">Upload Documents</PrimaryLink>}
+          />
+        ) : (
+          <DataPanel
+            title="Permit Inventory"
+            description={`${permits.length} records sorted by most recent upload.`}
           >
-            Upload your first permit
-          </Link>
-        </div>
-      ) : (
-        <ul className="mt-8 divide-y divide-gray-200 overflow-hidden rounded-lg border border-gray-200 dark:divide-gray-800 dark:border-gray-800">
-          {permits.map((p) => (
-            <li key={p.id}>
-              <Link
-                href={`/permits/${p.id}/dashboard`}
-                className="block px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-900"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{p.buildingName}</p>
-                    <p className="mt-1 truncate text-xs text-gray-600 dark:text-gray-400">
-                      {p.address}
-                    </p>
-                  </div>
-                  <div className="shrink-0 text-right">
-                    <p className="text-xs text-gray-500">
-                      {new Date(p.uploadedAt).toLocaleDateString()}
-                    </p>
-                    <p className="mt-1 truncate text-xs text-gray-400">{p.originalFilename}</p>
-                  </div>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+            <div className="overflow-x-auto rounded-2xl border border-slate-200">
+              <table className="w-full min-w-[820px] border-collapse bg-white text-left text-sm">
+                <thead className="bg-slate-50 text-slate-500">
+                  <tr>
+                    <th className="px-4 py-3 font-semibold">Building</th>
+                    <th className="px-4 py-3 font-semibold">Uploaded</th>
+                    <th className="px-4 py-3 font-semibold">Filename</th>
+                    <th className="px-4 py-3 font-semibold">Status</th>
+                    <th className="px-4 py-3 font-semibold">Dashboard</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {permits.map((permit) => (
+                    <tr key={permit.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-4">
+                        <p className="font-semibold text-slate-950">{permit.buildingName}</p>
+                        <p className="mt-1 max-w-sm truncate text-xs text-slate-500">
+                          {permit.address}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4 text-slate-600">
+                        {new Date(permit.uploadedAt).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="max-w-xs truncate font-medium text-slate-700">
+                          {permit.originalFilename}
+                        </p>
+                        <p className="mt-1 max-w-xs truncate text-xs text-slate-400">
+                          {permit.s3Key}
+                        </p>
+                      </td>
+                      <td className="px-4 py-4">
+                        <PermitStatusBadge status={permit.status} />
+                      </td>
+                      <td className="px-4 py-4">
+                        <Link
+                          href={`/permits/${permit.id}/dashboard`}
+                          className="font-semibold text-blue-600 hover:text-blue-800"
+                        >
+                          Open analysis
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </DataPanel>
+        )}
+      </div>
     </main>
   );
 }
