@@ -33,6 +33,15 @@ function lightingAdj(lighting: string | null): number {
   return 0
 }
 
+function squareFootageAdj(squareFootage: number | null): number {
+  if (squareFootage === null) return 0
+  if (squareFootage >= 100_000) return 10
+  if (squareFootage >= 50_000) return 7
+  if (squareFootage >= 10_000) return 3
+  if (squareFootage < 5_000) return -5
+  return 0
+}
+
 function hasControlsUpgrade(upgrades: BuildingProfile['detectedUpgrades']): boolean {
   return upgrades.some(u => u.type === 'Controls')
 }
@@ -127,6 +136,7 @@ export function computeRetrofitScore(
   const hAdj = hvacAdj(profile.hvacSystem)
   score += hAdj
   score += lightingAdj(profile.lightingType)
+  score += squareFootageAdj(profile.squareFootage)
 
   // Controls penalty applied independently; skip if HVAC already contributes a positive penalty
   // (prevents double-penalizing old HVAC systems whose controls status is unknown)

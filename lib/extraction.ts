@@ -26,25 +26,39 @@ export async function extractPermitText(permitId: string): Promise<ExtractionRes
   const permit = await getPermit(permitId)
   if (!permit) throw new Error(`Permit not found: ${permitId}`)
 
-  const buffer = await downloadPdf(permit.s3Key)
-  const parser = new PDFParse({ data: buffer })
-  const result = await parser.getText()
-  const rawText = result.text.slice(0, MAX_CHARS)
-  const characterCount = rawText.replace(/\s/g, '').length
+  try {
+    const buffer = await downloadPdf(permit.s3Key)
+    const parser = new PDFParse({ data: buffer })
+    const result = await parser.getText()
+    const rawText = result.text.slice(0, MAX_CHARS)
+    const characterCount = rawText.replace(/\s/g, '').length
 
-  if (characterCount < MIN_CHARS) {
+    if (characterCount < MIN_CHARS) {
+      await updatePermit(permitId, {
+        status: 'scanned_pdf',
+        rawText: '',
+        textExtraction: { status: 'scanned_pdf', characterCount: 0, extractedAt: new Date() },
+      })
+      return { outcome: 'scanned_pdf' }
+    }
+
     await updatePermit(permitId, {
-      status: 'scanned_pdf',
-      rawText: '',
-      textExtraction: { status: 'scanned_pdf', characterCount: 0, extractedAt: new Date() },
+      status: 'text_extracted',
+      rawText,
+      textExtraction: { status: 'completed', characterCount, extractedAt: new Date() },
     })
-    return { outcome: 'scanned_pdf' }
+    return { outcome: 'completed' }
+  } catch (err) {
+    const error = err instanceof Error ? err.message : 'Unknown extraction error'
+    await updatePermit(permitId, {
+      rawText: '',
+      textExtraction: {
+        status: 'failed',
+        characterCount: 0,
+        extractedAt: new Date(),
+        error,
+      },
+    })
+    return { outcome: 'failed', error }
   }
-
-  await updatePermit(permitId, {
-    status: 'text_extracted',
-    rawText,
-    textExtraction: { status: 'completed', characterCount, extractedAt: new Date() },
-  })
-  return { outcome: 'completed' }
 }

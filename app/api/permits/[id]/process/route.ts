@@ -24,6 +24,13 @@ export async function POST(
 
     const analyzeResult = await analyzePermit(id)
 
+    if (analyzeResult.outcome === 'skipped') {
+      return Response.json(
+        { status: 'failed', error: 'Permit text has not been extracted.' },
+        { status: 400 }
+      )
+    }
+
     if (analyzeResult.outcome === 'failed') {
       return Response.json({ status: 'failed', error: analyzeResult.error }, { status: 500 })
     }

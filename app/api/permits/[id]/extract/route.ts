@@ -8,7 +8,7 @@ export async function POST(
   const { id } = await params
   try {
     const result = await extractPermitText(id)
-    return Response.json(result)
+    return Response.json(result, { status: result.outcome === 'failed' ? 500 : 200 })
   } catch (err) {
     console.error('[extract]', err)
     return Response.json(

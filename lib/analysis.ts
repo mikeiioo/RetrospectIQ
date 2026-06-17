@@ -30,6 +30,48 @@ Respond with valid JSON matching this exact schema:
   "confidenceScores": { [field: string]: number }
 }`
 
+const UPGRADE_TYPES = ['HVAC', 'Lighting', 'Electrical', 'Envelope', 'Controls', 'Other'] as const
+
+function stringOrNull(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() ? value.trim() : null
+}
+
+function numberOrNull(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) ? value : null
+}
+
+function normalizeDetectedUpgrades(value: unknown): BuildingProfile['detectedUpgrades'] {
+  if (!Array.isArray(value)) return []
+
+  return value.flatMap(item => {
+    if (!item || typeof item !== 'object') return []
+    const record = item as Record<string, unknown>
+    const type = UPGRADE_TYPES.includes(record.type as (typeof UPGRADE_TYPES)[number])
+      ? (record.type as BuildingProfile['detectedUpgrades'][number]['type'])
+      : 'Other'
+    const description = stringOrNull(record.description)
+    if (!description) return []
+
+    return [
+      {
+        type,
+        description,
+        year: numberOrNull(record.year),
+      },
+    ]
+  })
+}
+
+function normalizeConfidenceScores(value: unknown): Record<string, number> {
+  if (!value || typeof value !== 'object') return {}
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).filter(
+      (entry): entry is [string, number] =>
+        typeof entry[1] === 'number' && Number.isFinite(entry[1])
+    )
+  )
+}
+
 function getClient(): OpenAI {
   return new OpenAI({ apiKey: openaiApiKey() })
 }
@@ -63,14 +105,14 @@ export async function analyzePermit(permitId: string): Promise<AnalysisResult> {
 
   const profile: BuildingProfile = {
     permitId,
-    buildingYear: data.buildingYear ?? null,
-    buildingType: data.buildingType ?? null,
-    squareFootage: data.squareFootage ?? null,
-    hvacSystem: data.hvacSystem ?? null,
-    lightingType: data.lightingType ?? null,
-    electricalService: data.electricalService ?? null,
-    detectedUpgrades: Array.isArray(data.detectedUpgrades) ? data.detectedUpgrades : [],
-    confidenceScores: data.confidenceScores ?? {},
+    buildingYear: numberOrNull(data.buildingYear),
+    buildingType: stringOrNull(data.buildingType),
+    squareFootage: numberOrNull(data.squareFootage),
+    hvacSystem: stringOrNull(data.hvacSystem),
+    lightingType: stringOrNull(data.lightingType),
+    electricalService: stringOrNull(data.electricalService),
+    detectedUpgrades: normalizeDetectedUpgrades(data.detectedUpgrades),
+    confidenceScores: normalizeConfidenceScores(data.confidenceScores),
     extractedAt: new Date(),
   }
 

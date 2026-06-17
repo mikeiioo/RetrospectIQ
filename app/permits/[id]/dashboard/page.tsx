@@ -90,13 +90,13 @@ export default async function PermitDashboardPage({
           suffix={isScored ? '/ 100' : undefined}
         />
         <Card
-          label="Energy Reduction"
+          label="Estimated Energy Reduction"
           value={
             isScored && prediction ? `${prediction.estimatedEnergyReductionPercent}%` : '—'
           }
         />
         <Card
-          label="Est. Annual Savings"
+          label="Estimated Annual Savings"
           value={
             isScored && prediction
               ? `$${prediction.estimatedAnnualSavings.toLocaleString()}`
@@ -105,7 +105,7 @@ export default async function PermitDashboardPage({
           suffix={isScored ? '/ year' : undefined}
         />
         <Card
-          label="Carbon Reduction"
+          label="Estimated Carbon Reduction"
           value={
             isScored && prediction ? `${prediction.estimatedCarbonReductionTons}` : '—'
           }
@@ -140,9 +140,9 @@ export default async function PermitDashboardPage({
             </dl>
           </section>
 
-          {profile.detectedUpgrades.length > 0 && (
-            <section className="mt-6 rounded-lg border border-gray-200 p-6 dark:border-gray-800">
-              <h3 className="text-sm font-semibold">Detected upgrades</h3>
+          <section className="mt-6 rounded-lg border border-gray-200 p-6 dark:border-gray-800">
+            <h3 className="text-sm font-semibold">Detected Upgrades</h3>
+            {profile.detectedUpgrades.length > 0 ? (
               <ul className="mt-3 space-y-2 text-sm">
                 {profile.detectedUpgrades.map((u, i) => (
                   <li key={i} className="flex items-start gap-3">
@@ -154,8 +154,12 @@ export default async function PermitDashboardPage({
                   </li>
                 ))}
               </ul>
-            </section>
-          )}
+            ) : (
+              <p className="mt-3 text-sm text-gray-500">
+                No detected upgrades were found in the permit text.
+              </p>
+            )}
+          </section>
 
           <section className="mt-6 rounded-lg border border-gray-200 p-6 dark:border-gray-800">
             <h3 className="text-sm font-semibold">Recommendations</h3>

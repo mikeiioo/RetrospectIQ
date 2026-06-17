@@ -39,6 +39,18 @@ describe('computeRetrofitScore', () => {
     })
   })
 
+  describe('square footage adjustment', () => {
+    it('adds opportunity for larger buildings', () => {
+      const r = computeRetrofitScore({ ...base, squareFootage: 100000 })
+      expect(r.retrofitImpactScore).toBe(60)
+    })
+
+    it('reduces opportunity for very small buildings', () => {
+      const r = computeRetrofitScore({ ...base, squareFootage: 3000 })
+      expect(r.retrofitImpactScore).toBe(45)
+    })
+  })
+
   describe('HVAC adjustment', () => {
     it('adds 15 for old RTU; skips controls penalty', () => {
       // base=40, hvacAdj=+15, hvacAdj>0 so no controls penalty → 55
@@ -161,8 +173,8 @@ describe('computeRetrofitScore', () => {
   describe('estimated outputs', () => {
     it('uses sqft-based savings formula when sqft is known', () => {
       const r = computeRetrofitScore({ ...base, buildingYear: 1980, squareFootage: 10000 })
-      // score = base55 + controls+10 = 65; savings = 10000 * 1.2 * (65/100) = 7800 → rounded to 7800
-      expect(r.estimatedAnnualSavings).toBe(7800)
+      // score = base55 + sqft+3 + controls+10 = 68; savings = 10000 * 1.2 * (68/100) = 8160 → rounded to 8200
+      expect(r.estimatedAnnualSavings).toBe(8200)
     })
 
     it('falls back to score*400 when sqft is unknown', () => {
