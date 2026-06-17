@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 const navItems = [
@@ -13,8 +14,15 @@ export default function Nav() {
     <>
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-slate-200 bg-slate-950 px-5 py-6 text-white lg:flex lg:flex-col">
         <Link href="/" className="flex items-center gap-3 rounded-2xl px-2 py-1">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-blue-500 text-base font-semibold shadow-lg shadow-blue-950/30">
-            RQ
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white p-1.5 shadow-lg shadow-blue-950/30">
+            <Image
+              src="/logo.png"
+              alt=""
+              width={40}
+              height={46}
+              className="h-full w-full object-contain"
+              priority
+            />
           </span>
           <span>
             <span className="block text-base font-semibold">RetrospectIQ</span>
@@ -46,8 +54,15 @@ export default function Nav() {
         <details className="group">
           <summary className="flex cursor-pointer list-none items-center justify-between rounded-2xl px-2 py-1">
             <Link href="/" className="flex items-center gap-3">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-slate-950 text-sm font-semibold text-white">
-                RQ
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white p-1 shadow-sm ring-1 ring-slate-200">
+                <Image
+                  src="/logo.png"
+                  alt=""
+                  width={32}
+                  height={37}
+                  className="h-full w-full object-contain"
+                  priority
+                />
               </span>
               <span className="font-semibold text-slate-950">RetrospectIQ</span>
             </Link>
