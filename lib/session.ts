@@ -36,11 +36,4 @@ export async function requireApiUser(): Promise<
   return { user };
 }
 
-/** Only allow same-site relative paths as post-auth redirect targets. */
-export function safeRedirectPath(value: string | string[] | undefined): string {
-  const path = Array.isArray(value) ? value[0] : value;
-  if (!path || !path.startsWith("/") || path.startsWith("//") || path.startsWith("/\\")) {
-    return "/dashboard";
-  }
-  return path;
-}
+export { safeRedirectPath } from "./redirects";

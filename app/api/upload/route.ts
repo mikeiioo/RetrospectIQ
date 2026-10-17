@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { hasPdfSignature } from "@/lib/pdf";
 import { createPermit } from "@/lib/permits";
 import { consumeRateLimit, limits, rateLimitResponse } from "@/lib/rate-limit";
 import { getS3Bucket, getS3Client } from "@/lib/s3";
@@ -51,8 +52,7 @@ export async function POST(request: Request) {
   const s3Key = `permits/${randomUUID()}.pdf`;
   const bytes = Buffer.from(await file.arrayBuffer());
 
-  // The browser-reported MIME type is client-controlled; confirm the PDF signature.
-  if (bytes.subarray(0, 5).toString("latin1") !== "%PDF-") {
+  if (!hasPdfSignature(bytes)) {
     return Response.json({ error: "File is not a valid PDF" }, { status: 400 });
   }
 

@@ -26,7 +26,10 @@ Permit status moves through `uploaded` → `text_extracted` | `scanned_pdf` → 
 
 | Route | Purpose |
 | --- | --- |
-| `/` | Portfolio dashboard |
+| `/`, `/learn` | Public landing page and retrofit guide |
+| `/sign-in`, `/sign-up` | Authentication |
+| `/dashboard` | Portfolio dashboard |
+| `/profile` | Photo, name, password, sign-in methods |
 | `/buildings`, `/buildings/[id]` | Building cards and detail |
 | `/permits`, `/permits/[id]/dashboard` | Permit inventory and per-permit analysis |
 | `/recommendations` | Portfolio-wide recommendation queue |
@@ -51,12 +54,26 @@ Open [http://localhost:3000](http://localhost:3000).
 | `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Credentials with read/write access to the bucket |
 | `AWS_S3_BUCKET_NAME` | Bucket for permit PDFs |
 | `OPENAI_API_KEY` | Server-side building profile extraction |
+| `BETTER_AUTH_SECRET` | Session signing secret (`openssl rand -base64 32`); use a different value per environment |
+| `BETTER_AUTH_URL` | Site origin, e.g. `http://localhost:3000`. On Vercel set it for **Production only**; previews use their own URL automatically |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google sign-in (optional; the button only appears when set) |
+| `GOOGLE_MAPS_EMBED_API_KEY` | Building location maps (optional; a placeholder links to Google Maps without it) |
 
 `.env.local` is gitignored. Never commit real credentials.
 
+### Accounts and data ownership
+
+Sign-in uses [Better Auth](https://www.better-auth.com) with email/password and Google, storing users and sessions in MongoDB. Every permit has an `ownerId`, and all reads are scoped to the signed-in user. `proxy.ts` redirects signed-out visitors, and each page and API route verifies the session itself.
+
+Permits created before auth existed have no owner. Assign them once to an account (sign up first):
+
+```bash
+npm run assign-owner -- you@example.com
+```
+
 ### Seed data
 
-`npm run seed` removes and recreates a fixed set of demo records (Atlanta-area buildings, scored permits, profiles, recommendations, and one scanned PDF example), so it is safe to re-run.
+`npm run seed -- you@example.com` removes and recreates a fixed set of demo records (Atlanta-area buildings, scored permits, profiles, recommendations, and one scanned PDF example) owned by that account, so it is safe to re-run.
 
 ## Commands
 
@@ -65,8 +82,13 @@ npm run dev     # development server
 npm run build   # production build
 npm run lint    # ESLint
 npm test        # Vitest
-npm run seed    # reset demo data
+npm run seed -- you@example.com          # reset demo data for an account
+npm run assign-owner -- you@example.com  # claim permits that have no owner
 ```
+
+Tests cover scoring, auth enforcement in `proxy.ts`, permit ownership scoping, rate limiting, upload/avatar validation, safe redirects, and the processing pipeline.
+
+npm may crash resolving Better Auth's optional peer dependencies; `.npmrc` sets `legacy-peer-deps=true` to avoid it.
 
 ## Deployment
 
