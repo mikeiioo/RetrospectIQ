@@ -39,6 +39,11 @@ export async function POST(request: Request) {
   const s3Key = `permits/${randomUUID()}.pdf`;
   const bytes = Buffer.from(await file.arrayBuffer());
 
+  // The browser-reported MIME type is client-controlled; confirm the PDF signature.
+  if (bytes.subarray(0, 5).toString("latin1") !== "%PDF-") {
+    return Response.json({ error: "File is not a valid PDF" }, { status: 400 });
+  }
+
   await getS3Client().send(
     new PutObjectCommand({
       Bucket: getS3Bucket(),

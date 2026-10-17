@@ -34,3 +34,9 @@ export async function getPrediction(permitId: string): Promise<Prediction | null
   const c = await col();
   return c.findOne({ permitId });
 }
+
+export async function listPredictions(permitIds: string[]): Promise<Prediction[]> {
+  if (permitIds.length === 0) return [];
+  const c = await col();
+  return c.find({ permitId: { $in: permitIds } }).toArray();
+}

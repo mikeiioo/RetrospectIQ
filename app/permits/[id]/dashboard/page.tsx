@@ -134,7 +134,7 @@ export default async function PermitDashboardPage({
             />
           </DataPanel>
 
-          {isScored && prediction && profile ? (
+          {isAnalyzed && profile ? (
             <>
               <DataPanel title="AI Building Profile" description="Extracted from permit text.">
                 <dl className="grid gap-4 md:grid-cols-2">
@@ -189,20 +189,27 @@ export default async function PermitDashboardPage({
                 title="Recommendations"
                 description="Prototype estimate generated from permit text. Not a certified energy audit."
               >
-                <div className="grid gap-4 lg:grid-cols-2">
-                  {prediction.recommendations.map((recommendation, index) => (
-                    <RecommendationCard
-                      key={`${recommendation.name}-${index}`}
-                      title={recommendation.name}
-                      priority={recommendation.priority}
-                      impact={`${prediction.estimatedEnergyReductionPercent}% energy`}
-                      savings={formatCurrency(prediction.estimatedAnnualSavings)}
-                      description={recommendation.reason}
-                      buildingName={permit.buildingName}
-                      href={`/buildings/${permit.id}`}
-                    />
-                  ))}
-                </div>
+                {isScored && prediction ? (
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {prediction.recommendations.map((recommendation, index) => (
+                      <RecommendationCard
+                        key={`${recommendation.name}-${index}`}
+                        title={recommendation.name}
+                        priority={recommendation.priority}
+                        impact={`${prediction.estimatedEnergyReductionPercent}% energy`}
+                        savings={formatCurrency(prediction.estimatedAnnualSavings)}
+                        description={recommendation.reason}
+                        buildingName={permit.buildingName}
+                        href={`/buildings/${permit.id}`}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500">
+                    The building profile is ready, but scoring has not completed. Re-run
+                    analysis to generate recommendations.
+                  </p>
+                )}
               </DataPanel>
             </>
           ) : (

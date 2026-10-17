@@ -24,3 +24,9 @@ __pycache__/
 
 # Model files
 *.joblib
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Claude Code agent worktrees
+.claude/worktrees/

@@ -1,9 +1,10 @@
 import {
   getBuildingProfile,
+  listBuildingProfiles,
   type BuildingProfile,
 } from "@/lib/building-profiles";
 import { getPermit, listPermits, type PermitView } from "@/lib/permits";
-import { getPrediction, type Prediction } from "@/lib/predictions";
+import { getPrediction, listPredictions, type Prediction } from "@/lib/predictions";
 
 export interface BuildingRecord {
   permit: PermitView;
@@ -20,13 +21,21 @@ export interface RecommendationRecord {
 
 export async function listBuildingRecords(): Promise<BuildingRecord[]> {
   const permits = await listPermits();
-  return Promise.all(
-    permits.map(async (permit) => ({
-      permit,
-      profile: await getBuildingProfile(permit.id),
-      prediction: await getPrediction(permit.id),
-    })),
+  const permitIds = permits.map((permit) => permit.id);
+  const [profiles, predictions] = await Promise.all([
+    listBuildingProfiles(permitIds),
+    listPredictions(permitIds),
+  ]);
+  const profileById = new Map(profiles.map((profile) => [profile.permitId, profile]));
+  const predictionById = new Map(
+    predictions.map((prediction) => [prediction.permitId, prediction]),
   );
+
+  return permits.map((permit) => ({
+    permit,
+    profile: profileById.get(permit.id) ?? null,
+    prediction: predictionById.get(permit.id) ?? null,
+  }));
 }
 
 export async function getBuildingRecord(id: string): Promise<BuildingRecord | null> {

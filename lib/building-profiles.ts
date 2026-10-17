@@ -34,3 +34,9 @@ export async function getBuildingProfile(permitId: string): Promise<BuildingProf
   const c = await col();
   return c.findOne({ permitId });
 }
+
+export async function listBuildingProfiles(permitIds: string[]): Promise<BuildingProfile[]> {
+  if (permitIds.length === 0) return [];
+  const c = await col();
+  return c.find({ permitId: { $in: permitIds } }).toArray();
+}

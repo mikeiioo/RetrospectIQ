@@ -4,7 +4,10 @@ import { analyzePermit } from '@/lib/analysis'
 import { computeRetrofitScore } from '@/lib/scoring'
 import { getBuildingProfile } from '@/lib/building-profiles'
 import { upsertPrediction } from '@/lib/predictions'
-import { updatePermit } from '@/lib/permits'
+import { getPermit, updatePermit } from '@/lib/permits'
+
+// Extraction + OpenAI analysis can exceed the platform's default function timeout.
+export const maxDuration = 60
 
 export async function POST(
   _request: NextRequest,
@@ -12,7 +15,18 @@ export async function POST(
 ) {
   const { id } = await params
   try {
-    const extractResult = await extractPermitText(id)
+    const permit = await getPermit(id)
+    if (!permit) {
+      return Response.json({ status: 'failed', error: 'Permit not found' }, { status: 404 })
+    }
+
+    // Re-runs reuse previously extracted text instead of re-downloading the PDF.
+    const alreadyExtracted =
+      permit.textExtraction?.status === 'completed' && Boolean(permit.rawText)
+
+    const extractResult = alreadyExtracted
+      ? ({ outcome: 'completed' } as const)
+      : await extractPermitText(id)
 
     if (extractResult.outcome === 'scanned_pdf') {
       return Response.json({ status: 'scanned_pdf' })

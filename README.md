@@ -1,98 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# RetrospectIQ
 
-## Getting Started
+RetrospectIQ turns building permit PDFs into retrofit intelligence. Upload a permit, and the app extracts its text, uses OpenAI to build a structured building profile, and applies a rule-based model to produce a retrofit impact score, savings and carbon estimates, and prioritized recommendations.
 
-First, run the development server:
+> Prototype: scores and estimates come from a rule-based model (`lib/scoring.ts`), not a certified energy audit.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Stack
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4
+- MongoDB for permits, building profiles, and predictions
+- AWS S3 for permit PDF storage
+- OpenAI (`gpt-4o-mini`) for building profile extraction
+- `pdf-parse` for text extraction, Vitest for tests
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## How it works
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Upload** (`/upload` → `POST /api/upload`): validates the PDF (max 25 MB), stores it in S3 under `permits/`, and creates a permit record.
+2. **Process** (`POST /api/permits/[id]/process`), triggered by "Run AI Retrofit Analysis":
+   - **Extract** (`lib/extraction.ts`): downloads the PDF and extracts text. Image-only PDFs are marked `scanned_pdf` (OCR is not supported).
+   - **Analyze** (`lib/analysis.ts`): sends the text to OpenAI and saves a building profile.
+   - **Score** (`lib/scoring.ts`): computes the retrofit score, estimates, and recommendations.
 
-## Learn More
+Permit status moves through `uploaded` → `text_extracted` | `scanned_pdf` → `analyzed` → `scored`.
 
-To learn more about Next.js, take a look at the following resources:
+## Pages
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Route | Purpose |
+| --- | --- |
+| `/` | Portfolio dashboard |
+| `/buildings`, `/buildings/[id]` | Building cards and detail |
+| `/permits`, `/permits/[id]/dashboard` | Permit inventory and per-permit analysis |
+| `/recommendations` | Portfolio-wide recommendation queue |
+| `/upload` | Permit intake |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## RetrospectIQ Local Setup
-
-RetrospectIQ is a Next.js and TypeScript prototype that uploads building permit PDFs to AWS S3, stores permit metadata in MongoDB, extracts PDF text, runs OpenAI-assisted building profile extraction, and displays rule-based retrofit recommendations on a permit dashboard.
-
-To run the app locally:
+## Local setup
 
 ```bash
 npm install
+cp .env.example .env.local   # then fill in the values
+npm run seed                 # optional: load the Atlanta demo portfolio
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), then use the landing page CTAs to upload a permit or view existing permits.
+Open [http://localhost:3000](http://localhost:3000).
 
-## Environment Variables
+### Environment variables
 
-Create a local `.env.local` file with the server-side credentials below. Do not commit this file.
+| Variable | Purpose |
+| --- | --- |
+| `MONGODB_URI` | MongoDB connection string, including the database name |
+| `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` | Credentials with read/write access to the bucket |
+| `AWS_S3_BUCKET_NAME` | Bucket for permit PDFs |
+| `OPENAI_API_KEY` | Server-side building profile extraction |
 
-```bash
-MONGODB_URI=
-AWS_REGION=
-AWS_ACCESS_KEY_ID=
-AWS_SECRET_ACCESS_KEY=
-AWS_S3_BUCKET_NAME=
-OPENAI_API_KEY=
-```
+`.env.local` is gitignored. Never commit real credentials.
 
-`MONGODB_URI` should point to the MongoDB database used by the app. The AWS variables should allow PDF upload and download for the configured S3 bucket. `OPENAI_API_KEY` is used only by server-side analysis code.
+### Seed data
 
-## OpenAI API Configuration
+`npm run seed` removes and recreates a fixed set of demo records (Atlanta-area buildings, scored permits, profiles, recommendations, and one scanned PDF example), so it is safe to re-run.
 
-The Phase 7 analysis route uses the OpenAI API to convert extracted permit text into a structured building profile. Configure `OPENAI_API_KEY` in `.env.local` before running AI analysis from a permit dashboard.
-
-The app instructs the model to avoid hallucinating and to return `null` for unknown fields. The resulting profile is saved in MongoDB and then passed into the prototype TypeScript scoring logic.
-
-## Seed Instructions
-
-Run the deterministic demo seed whenever you want to refresh the portfolio data:
+## Commands
 
 ```bash
-npm run seed
+npm run dev     # development server
+npm run build   # production build
+npm run lint    # ESLint
+npm test        # Vitest
+npm run seed    # reset demo data
 ```
 
-The seed process is safe to re-run. It removes and recreates the same fixed demo records, so it does not duplicate data. Seeded records include Atlanta-area buildings, scored permits, building profiles, retrofit recommendations, and one scanned PDF example.
+## Deployment
 
-## Demo Walkthrough
-
-1. Visit `/` to see the RetrospectIQ landing page.
-2. Open `/permits` to review seeded demo permits.
-3. Open a permit dashboard to see building profile data, retrofit impact score, savings estimates, detected upgrades, and recommendations.
-4. Visit `/upload` to upload a text-based PDF permit.
-5. Open the uploaded permit dashboard and click `Run AI Retrofit Analysis` to exercise the S3 download, PDF extraction, OpenAI analysis, MongoDB persistence, scoring, and dashboard refresh workflow.
-
-## Development Commands
-
-```bash
-npm run dev
-npm run lint
-npm run build
-npm run seed
-npm test
-```
+Deployed on Vercel. Set the environment variables above in the Vercel project settings.
