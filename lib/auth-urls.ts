@@ -2,7 +2,7 @@ type Env = Record<string, string | undefined>;
 
 export type AuthBaseURL =
   | string
-  | { allowedHosts: string[]; protocol: "https" }
+  | { allowedHosts: string[]; protocol: "https"; fallback?: string }
   | undefined;
 
 /**
@@ -14,7 +14,11 @@ export type AuthBaseURL =
 export function authBaseURL(env: Env = process.env): AuthBaseURL {
   if (env.VERCEL_ENV === "preview") {
     const hosts = [env.VERCEL_URL, env.VERCEL_BRANCH_URL].filter((host): host is string => Boolean(host));
-    if (hosts.length > 0) return { allowedHosts: hosts, protocol: "https" };
+    if (hosts.length > 0) {
+      // Without a fallback, a request on any other host makes every session lookup throw (500).
+      const fallback = env.BETTER_AUTH_URL || `https://${hosts[0]}`;
+      return { allowedHosts: hosts, protocol: "https", fallback };
+    }
   }
   // Undefined lets Better Auth read BETTER_AUTH_URL itself.
   return undefined;

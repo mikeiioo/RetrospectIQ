@@ -13,6 +13,15 @@ describe('authBaseURL', () => {
     ).toEqual({
       allowedHosts: ['retro-abc123-team.vercel.app', 'retro-git-feature-team.vercel.app'],
       protocol: 'https',
+      fallback: 'https://www.retrospectiq.live',
+    })
+  })
+
+  it("falls back to the deployment's own URL when BETTER_AUTH_URL is unset", () => {
+    expect(authBaseURL({ VERCEL_ENV: 'preview', VERCEL_URL: 'retro-abc123-team.vercel.app' })).toEqual({
+      allowedHosts: ['retro-abc123-team.vercel.app'],
+      protocol: 'https',
+      fallback: 'https://retro-abc123-team.vercel.app',
     })
   })
 
