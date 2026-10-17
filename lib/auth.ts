@@ -3,7 +3,7 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { nextCookies } from "better-auth/next-js";
 import { getMongoClientSync } from "./mongodb";
 
-export type SocialProviderId = "google" | "microsoft";
+export type SocialProviderId = "google";
 
 function socialProviders() {
   const providers: Parameters<typeof betterAuth>[0]["socialProviders"] = {};
@@ -12,15 +12,6 @@ function socialProviders() {
     providers.google = {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    };
-  }
-
-  if (process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET) {
-    providers.microsoft = {
-      clientId: process.env.MICROSOFT_CLIENT_ID,
-      clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
-      // "common" accepts both personal (Outlook.com) and work/school accounts.
-      tenantId: "common",
     };
   }
 
@@ -39,7 +30,7 @@ export const auth = betterAuth({
   account: {
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google", "microsoft"],
+      trustedProviders: ["google"],
     },
   },
   // Database storage so limits hold across serverless instances.
@@ -53,6 +44,6 @@ export const auth = betterAuth({
 
 export function enabledSocialProviders(): SocialProviderId[] {
   return (Object.keys(socialProviders()) as SocialProviderId[]).filter(
-    (id) => id === "google" || id === "microsoft",
+    (id) => id === "google",
   );
 }

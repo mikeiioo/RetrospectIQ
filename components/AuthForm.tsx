@@ -8,7 +8,6 @@ import type { SocialProviderId } from "@/lib/auth";
 
 const providerLabels: Record<SocialProviderId, string> = {
   google: "Continue with Google",
-  microsoft: "Continue with Microsoft",
 };
 
 export function AuthForm({
