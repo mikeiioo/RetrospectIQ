@@ -1,17 +1,18 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-const AUTH_PAGES = ["/sign-in", "/sign-up"];
+// Pages anyone can view without signing in.
+const PUBLIC_PAGES = ["/", "/learn", "/sign-in", "/sign-up"];
 
 // Optimistic check only: it looks for a session cookie, not a valid session.
 // Pages and route handlers verify the session themselves (lib/session.ts).
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
-  const isAuthPage = AUTH_PAGES.some(
-    (page) => pathname === page || pathname.startsWith(`${page}/`),
+  const isPublic = PUBLIC_PAGES.some(
+    (page) => pathname === page || (page !== "/" && pathname.startsWith(`${page}/`)),
   );
 
-  if (isAuthPage || getSessionCookie(request)) {
+  if (isPublic || getSessionCookie(request)) {
     return NextResponse.next();
   }
 
@@ -20,7 +21,7 @@ export function proxy(request: NextRequest) {
   }
 
   const signIn = new URL("/sign-in", request.url);
-  if (pathname !== "/") signIn.searchParams.set("next", `${pathname}${search}`);
+  if (pathname !== "/dashboard") signIn.searchParams.set("next", `${pathname}${search}`);
   return NextResponse.redirect(signIn);
 }
 

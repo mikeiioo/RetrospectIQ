@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ComponentType, type SVGProps } from "react";
@@ -15,7 +14,7 @@ import {
   SidebarIcon,
   UploadIcon,
 } from "@/components/icons";
-import { UserMenu } from "@/components/UserMenu";
+import { TopBar } from "@/components/TopBar";
 import type { SessionUser } from "@/lib/session";
 
 export const SIDEBAR_COOKIE = "sidebar";
@@ -27,7 +26,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: "/", label: "Dashboard", icon: DashboardIcon },
+  { href: "/dashboard", label: "Dashboard", icon: DashboardIcon },
   { href: "/buildings", label: "Buildings", icon: BuildingIcon },
   { href: "/permits", label: "Permits", icon: PermitIcon },
   { href: "/recommendations", label: "Recommendations", icon: LightbulbIcon },
@@ -35,12 +34,13 @@ const navItems: NavItem[] = [
 ];
 
 function isActive(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function breadcrumb(pathname: string): string[] {
-  const section = navItems.find((item) => item.href !== "/" && isActive(pathname, item.href));
-  if (!section) return ["Dashboard"];
+  if (pathname === "/profile") return ["Profile"];
+  const section = navItems.find((item) => isActive(pathname, item.href));
+  if (!section) return [];
   if (pathname === section.href) return [section.label];
   if (section.href === "/buildings") return [section.label, "Building detail"];
   if (section.href === "/permits") return [section.label, "Permit dashboard"];
@@ -85,59 +85,29 @@ export function AppShell({
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/90 px-3 backdrop-blur sm:px-4">
-        <button
-          type="button"
-          onClick={toggleSidebar}
-          aria-label={drawerOpen ? "Close navigation" : "Toggle navigation"}
-          aria-expanded={drawerOpen || !collapsed}
-          aria-controls="app-sidebar"
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-600 transition hover:bg-slate-100 hover:text-slate-950"
-        >
-          {drawerOpen ? (
-            <CloseIcon />
-          ) : (
-            <>
-              <MenuIcon className="lg:hidden" />
-              <SidebarIcon className="hidden lg:block" />
-            </>
-          )}
-        </button>
-
-        <Link href="/" className="flex shrink-0 items-center gap-2.5 rounded-xl pr-2">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-white p-1 shadow-sm ring-1 ring-slate-200">
-            <Image
-              src="/logo.png"
-              alt=""
-              width={28}
-              height={32}
-              className="h-full w-full object-contain"
-              priority
-            />
-          </span>
-          <span className="hidden font-semibold text-slate-950 sm:block">RetrospectIQ</span>
-        </Link>
-
-        <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-2 text-sm md:flex">
-          {crumbs.map((crumb, index) => (
-            <span key={crumb} className="flex min-w-0 items-center gap-2">
-              <span className="text-slate-300">/</span>
-              <span
-                className={cn(
-                  "truncate",
-                  index === crumbs.length - 1 ? "font-semibold text-slate-950" : "text-slate-500",
-                )}
-              >
-                {crumb}
-              </span>
-            </span>
-          ))}
-        </nav>
-
-        <div className="ml-auto">
-          <UserMenu user={user} />
-        </div>
-      </header>
+      <TopBar
+        user={user}
+        crumbs={crumbs}
+        leading={
+          <button
+            type="button"
+            onClick={toggleSidebar}
+            aria-label={drawerOpen ? "Close navigation" : "Toggle navigation"}
+            aria-expanded={drawerOpen || !collapsed}
+            aria-controls="app-sidebar"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-slate-300 transition hover:bg-white/10 hover:text-white"
+          >
+            {drawerOpen ? (
+              <CloseIcon />
+            ) : (
+              <>
+                <MenuIcon className="lg:hidden" />
+                <SidebarIcon className="hidden lg:block" />
+              </>
+            )}
+          </button>
+        }
+      />
 
       {drawerOpen && (
         <button

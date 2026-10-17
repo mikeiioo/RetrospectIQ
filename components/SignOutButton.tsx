@@ -11,7 +11,7 @@ export function SignOutButton({ className }: { className?: string }) {
   async function handleClick() {
     setPending(true);
     await authClient.signOut();
-    router.push("/sign-in");
+    router.push("/");
     router.refresh();
   }
 

@@ -40,7 +40,7 @@ export async function requireApiUser(): Promise<
 export function safeRedirectPath(value: string | string[] | undefined): string {
   const path = Array.isArray(value) ? value[0] : value;
   if (!path || !path.startsWith("/") || path.startsWith("//") || path.startsWith("/\\")) {
-    return "/";
+    return "/dashboard";
   }
   return path;
 }

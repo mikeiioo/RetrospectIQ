@@ -23,7 +23,7 @@ export function AuthForm({
   const [pending, setPending] = useState<"email" | SocialProviderId | null>(null);
   const [error, setError] = useState<string | null>(null);
   const isSignUp = mode === "sign-up";
-  const nextQuery = next === "/" ? "" : `?next=${encodeURIComponent(next)}`;
+  const nextQuery = next === "/dashboard" ? "" : `?next=${encodeURIComponent(next)}`;
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
