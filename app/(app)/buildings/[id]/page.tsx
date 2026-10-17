@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/session";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AnalysisButton } from "@/components/AnalysisButton";
+import { BuildingMap } from "@/components/BuildingMap";
 import {
   DataPanel,
   FieldValue,
@@ -172,6 +173,10 @@ export default async function BuildingDetailPage({
               )}
             </div>
           </InspectionSection>
+
+          <DataPanel title="Location" description="Click the map to open it in Google Maps.">
+            <BuildingMap name={permit.buildingName} address={permit.address} />
+          </DataPanel>
         </div>
       </section>
 
@@ -220,7 +225,8 @@ function InspectionSection({
       <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold text-slate-950">
         {title}
         <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500 group-open:bg-blue-50 group-open:text-blue-700">
-          Expand
+          <span className="group-open:hidden">Expand</span>
+          <span className="hidden group-open:inline">Collapse</span>
         </span>
       </summary>
       <div className="mt-5">{children}</div>

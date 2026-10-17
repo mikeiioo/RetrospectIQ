@@ -1,4 +1,5 @@
-import Nav from "@/components/Nav";
+import { cookies } from "next/headers";
+import { AppShell, SIDEBAR_COOKIE } from "@/components/AppShell";
 import { requireUser } from "@/lib/session";
 
 export default async function AppLayout({
@@ -7,11 +8,12 @@ export default async function AppLayout({
   children: React.ReactNode;
 }>) {
   const user = await requireUser();
+  // Read on the server so the sidebar renders in the saved state without a flash.
+  const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "collapsed";
 
   return (
-    <>
-      <Nav user={user} />
-      <div className="min-h-screen lg:pl-72">{children}</div>
-    </>
+    <AppShell user={user} initialCollapsed={collapsed}>
+      {children}
+    </AppShell>
   );
 }

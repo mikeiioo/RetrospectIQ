@@ -18,9 +18,28 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+html {
+  /* Keep anchored content clear of the fixed top bar. */
+  scroll-padding-top: 5rem;
+}
+
 ::selection {
   background: #bfdbfe;
   color: #0f172a;
+}
+
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 .app-page {

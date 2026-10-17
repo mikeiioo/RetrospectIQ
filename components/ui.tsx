@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { googleMapsUrl } from "@/lib/maps";
+import { MapPinIcon } from "@/components/icons";
 
 type Tone = "slate" | "blue" | "sky" | "emerald" | "amber" | "red";
 
@@ -244,20 +246,33 @@ export function BuildingCard({
   score: number | null;
   status: string;
 }) {
+  // The title link stretches over the whole card; the map link sits above it so
+  // the two targets don't nest (nested anchors are invalid HTML).
   return (
-    <Link
-      href={href}
-      className="group flex min-h-72 flex-col justify-between rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-slate-200"
-    >
+    <article className="group relative flex min-h-72 flex-col justify-between rounded-[20px] border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/70 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg hover:shadow-slate-200">
       <div>
         <div className="flex items-start justify-between gap-4">
           <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-slate-900 text-sm font-semibold text-white">
             {name.slice(0, 2).toUpperCase()}
           </div>
-          <PermitStatusBadge status={status} />
+          <div className="flex items-center gap-2">
+            <PermitStatusBadge status={status} />
+            <a
+              href={googleMapsUrl(address)}
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Open in Google Maps"
+              aria-label={`Open ${name} in Google Maps (new tab)`}
+              className="relative z-10 grid h-8 w-8 place-items-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+            >
+              <MapPinIcon width={16} height={16} />
+            </a>
+          </div>
         </div>
         <h3 className="mt-5 text-lg font-semibold leading-6 text-slate-950 group-hover:text-blue-700">
-          {name}
+          <Link href={href} className="after:absolute after:inset-0 after:rounded-[20px]">
+            {name}
+          </Link>
         </h3>
         <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">{address}</p>
       </div>
@@ -275,7 +290,7 @@ export function BuildingCard({
         </dl>
         <ScoreBar score={score} />
       </div>
-    </Link>
+    </article>
   );
 }
 
