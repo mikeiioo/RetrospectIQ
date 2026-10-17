@@ -38,6 +38,14 @@ function requireEnv(name) {
   return value
 }
 
+async function findOwnerId(db, email) {
+  const user = await db.collection('user').findOne({ email: email.toLowerCase() })
+  if (!user) {
+    throw new Error(`No account found for ${email}. Sign up in the app first, then re-run the seed.`)
+  }
+  return user._id.toString()
+}
+
 function rawTextFor(building) {
   return [
     `Building permit and modernization summary for ${building.name}.`,
@@ -305,10 +313,11 @@ const scannedPermit = {
   },
 }
 
-function buildPermit(building) {
+function buildPermit(building, ownerId) {
   const rawText = rawTextFor(building)
   return {
     _id: new ObjectId(building.id),
+    ownerId,
     buildingName: building.name,
     address: building.address,
     s3Key: building.s3Key,
@@ -345,12 +354,19 @@ function buildPrediction(building) {
 
 loadEnvLocal()
 
+const ownerEmail = process.argv[2] ?? process.env.SEED_OWNER_EMAIL
+if (!ownerEmail) {
+  console.error('Usage: npm run seed -- <account-email>  (or set SEED_OWNER_EMAIL)')
+  process.exit(1)
+}
+
 const client = new MongoClient(requireEnv('MONGODB_URI'))
 const seedIds = [...demoBuildings.map(building => building.id), scannedPermit._id.toString()]
 
 try {
   await client.connect()
   const db = client.db()
+  const ownerId = await findOwnerId(db, ownerEmail)
   const permits = db.collection('permits')
   const profiles = db.collection('building_profiles')
   const predictions = db.collection('predictions')
@@ -359,12 +375,16 @@ try {
   await profiles.deleteMany({ permitId: { $in: seedIds } })
   await predictions.deleteMany({ permitId: { $in: seedIds } })
 
-  await permits.insertMany([...demoBuildings.map(buildPermit), scannedPermit])
+  await permits.insertMany([
+    ...demoBuildings.map(building => buildPermit(building, ownerId)),
+    { ...scannedPermit, ownerId },
+  ])
   await profiles.insertMany(demoBuildings.map(buildProfile))
   await predictions.insertMany(demoBuildings.map(buildPrediction))
 
   console.log('RetrospectIQ demo seed complete')
   console.log(`Database: ${db.databaseName}`)
+  console.log(`Owner: ${ownerEmail}`)
   console.log(`Permits: ${seedIds.length}`)
   console.log(`Building profiles: ${demoBuildings.length}`)
   console.log(`Predictions: ${demoBuildings.length}`)

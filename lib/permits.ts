@@ -17,6 +17,7 @@ export interface TextExtraction {
 
 export interface Permit {
   _id?: ObjectId;
+  ownerId: string;
   buildingName: string;
   address: string;
   s3Key: string;
@@ -77,6 +78,7 @@ async function permitsCollection(): Promise<Collection<Permit>> {
 }
 
 export async function createPermit(input: {
+  ownerId: string;
   buildingName: string;
   address: string;
   s3Key: string;
@@ -93,16 +95,28 @@ export async function createPermit(input: {
   return result.insertedId.toString();
 }
 
-export async function getPermit(id: string): Promise<PermitView | null> {
+/** Returns the permit only if it belongs to `ownerId`. Use for anything user-facing. */
+export async function getPermit(id: string, ownerId: string): Promise<PermitView | null> {
+  if (!ObjectId.isValid(id)) return null;
+  const col = await permitsCollection();
+  const doc = await col.findOne({ _id: new ObjectId(id), ownerId });
+  return doc ? toView(doc) : null;
+}
+
+/**
+ * Unscoped lookup for the processing pipeline. Callers must already have
+ * verified ownership with getPermit().
+ */
+export async function getPermitById(id: string): Promise<PermitView | null> {
   if (!ObjectId.isValid(id)) return null;
   const col = await permitsCollection();
   const doc = await col.findOne({ _id: new ObjectId(id) });
   return doc ? toView(doc) : null;
 }
 
-export async function listPermits(): Promise<PermitView[]> {
+export async function listPermits(ownerId: string): Promise<PermitView[]> {
   const col = await permitsCollection();
-  const docs = await col.find().sort({ uploadedAt: -1 }).toArray();
+  const docs = await col.find({ ownerId }).sort({ uploadedAt: -1 }).toArray();
   return docs.map(toView);
 }
 

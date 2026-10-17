@@ -19,8 +19,8 @@ export interface RecommendationRecord {
   recommendation: Prediction["recommendations"][number];
 }
 
-export async function listBuildingRecords(): Promise<BuildingRecord[]> {
-  const permits = await listPermits();
+export async function listBuildingRecords(ownerId: string): Promise<BuildingRecord[]> {
+  const permits = await listPermits(ownerId);
   const permitIds = permits.map((permit) => permit.id);
   const [profiles, predictions] = await Promise.all([
     listBuildingProfiles(permitIds),
@@ -38,8 +38,11 @@ export async function listBuildingRecords(): Promise<BuildingRecord[]> {
   }));
 }
 
-export async function getBuildingRecord(id: string): Promise<BuildingRecord | null> {
-  const permit = await getPermit(id);
+export async function getBuildingRecord(
+  id: string,
+  ownerId: string,
+): Promise<BuildingRecord | null> {
+  const permit = await getPermit(id, ownerId);
   if (!permit) return null;
 
   const [profile, prediction] = await Promise.all([

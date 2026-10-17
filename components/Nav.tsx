@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { SignOutButton } from "@/components/SignOutButton";
+import type { SessionUser } from "@/lib/session";
 
 const navItems = [
   { href: "/", label: "Dashboard" },
@@ -9,7 +11,7 @@ const navItems = [
   { href: "/upload", label: "Upload Documents" },
 ];
 
-export default function Nav() {
+export default function Nav({ user }: { user: SessionUser }) {
   return (
     <>
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-slate-200 bg-slate-950 px-5 py-6 text-white lg:flex lg:flex-col">
@@ -43,10 +45,9 @@ export default function Nav() {
         </nav>
 
         <div className="mt-auto rounded-[20px] border border-slate-800 bg-slate-900 p-4">
-          <p className="text-sm font-semibold text-white">Demo Analyst</p>
-          <p className="mt-1 text-xs leading-5 text-slate-400">
-            Atlanta retrofit portfolio
-          </p>
+          <p className="truncate text-sm font-semibold text-white">{user.name || "Account"}</p>
+          <p className="mt-1 truncate text-xs leading-5 text-slate-400">{user.email}</p>
+          <SignOutButton className="mt-3 w-full rounded-xl border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300 transition hover:bg-slate-800 hover:text-white" />
         </div>
       </aside>
 
@@ -80,6 +81,10 @@ export default function Nav() {
                 {item.label}
               </Link>
             ))}
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 shadow-sm">
+              <p className="min-w-0 truncate text-sm text-slate-500">{user.email}</p>
+              <SignOutButton className="shrink-0 text-sm font-semibold text-blue-600 hover:text-blue-800" />
+            </div>
           </nav>
         </details>
       </header>

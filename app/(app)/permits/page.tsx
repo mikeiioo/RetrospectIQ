@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/session";
 import Link from "next/link";
 import { listPermits } from "@/lib/permits";
 import {
@@ -11,7 +12,8 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function PermitsPage() {
-  const permits = await listPermits();
+  const user = await requireUser();
+  const permits = await listPermits(user.id);
 
   return (
     <main className="app-page">

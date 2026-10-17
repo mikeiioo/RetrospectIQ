@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/session";
 import {
   listBuildingRecords,
   listRecommendationRecords,
@@ -15,7 +16,8 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function RecommendationsPage() {
-  const records = await listBuildingRecords();
+  const user = await requireUser();
+  const records = await listBuildingRecords(user.id);
   const recommendations = listRecommendationRecords(records).sort((a, b) => {
     const rank = { High: 3, Medium: 2, Low: 1 };
     return rank[b.recommendation.priority] - rank[a.recommendation.priority];

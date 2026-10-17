@@ -13,6 +13,12 @@ function getCached() {
   return globalThis.__retroMongo;
 }
 
+// Unawaited client for libraries that need a Db handle synchronously (Better Auth);
+// the driver queues operations until the shared connect() resolves.
+export function getMongoClientSync(): MongoClient {
+  return getCached().client;
+}
+
 export async function getMongoClient(): Promise<MongoClient> {
   return getCached().promise;
 }

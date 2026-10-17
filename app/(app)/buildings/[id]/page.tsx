@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/session";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AnalysisButton } from "@/components/AnalysisButton";
@@ -23,7 +24,8 @@ export default async function BuildingDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const record = await getBuildingRecord(id);
+  const user = await requireUser();
+  const record = await getBuildingRecord(id, user.id);
   if (!record) notFound();
 
   const { permit, profile, prediction } = record;

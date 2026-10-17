@@ -1,11 +1,23 @@
 import { randomUUID } from "node:crypto";
 import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { createPermit } from "@/lib/permits";
+import { consumeRateLimit, limits, rateLimitResponse } from "@/lib/rate-limit";
 import { getS3Bucket, getS3Client } from "@/lib/s3";
+import { requireApiUser } from "@/lib/session";
 
 const MAX_BYTES = 25 * 1024 * 1024;
 
 export async function POST(request: Request) {
+  const { user, response } = await requireApiUser();
+  if (response) return response;
+
+  const rate = await consumeRateLimit(
+    `upload:${user.id}`,
+    limits.upload.limit,
+    limits.upload.windowMs,
+  );
+  if (!rate.ok) return rateLimitResponse(rate);
+
   let form: FormData;
   try {
     form = await request.formData();
@@ -54,6 +66,7 @@ export async function POST(request: Request) {
   );
 
   const id = await createPermit({
+    ownerId: user.id,
     buildingName: buildingName.trim(),
     address: address.trim(),
     s3Key,

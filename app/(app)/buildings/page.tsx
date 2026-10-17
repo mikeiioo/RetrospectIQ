@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/session";
 import {
   listBuildingRecords,
   readinessScore,
@@ -13,7 +14,8 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function BuildingsPage() {
-  const records = await listBuildingRecords();
+  const user = await requireUser();
+  const records = await listBuildingRecords(user.id);
   const scored = records.filter((record) => record.prediction).length;
   const averageScore =
     scored === 0

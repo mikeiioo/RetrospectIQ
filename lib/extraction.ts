@@ -1,7 +1,7 @@
 import { PDFParse } from 'pdf-parse'
 import { GetObjectCommand } from '@aws-sdk/client-s3'
 import { getS3Client, getS3Bucket } from './s3'
-import { getPermit, updatePermit } from './permits'
+import { getPermitById, updatePermit } from './permits'
 
 export type ExtractionResult = {
   outcome: 'completed' | 'scanned_pdf' | 'failed'
@@ -23,7 +23,7 @@ async function downloadPdf(s3Key: string): Promise<Buffer> {
 }
 
 export async function extractPermitText(permitId: string): Promise<ExtractionResult> {
-  const permit = await getPermit(permitId)
+  const permit = await getPermitById(permitId)
   if (!permit) throw new Error(`Permit not found: ${permitId}`)
 
   try {

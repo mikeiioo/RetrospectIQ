@@ -5,6 +5,8 @@ import { computeRetrofitScore } from '@/lib/scoring'
 import { getBuildingProfile } from '@/lib/building-profiles'
 import { upsertPrediction } from '@/lib/predictions'
 import { getPermit, updatePermit } from '@/lib/permits'
+import { consumeRateLimit, limits, rateLimitResponse } from '@/lib/rate-limit'
+import { requireApiUser } from '@/lib/session'
 
 // Extraction + OpenAI analysis can exceed the platform's default function timeout.
 export const maxDuration = 60
@@ -13,12 +15,22 @@ export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { user, response } = await requireApiUser()
+  if (response) return response
+
   const { id } = await params
   try {
-    const permit = await getPermit(id)
+    const permit = await getPermit(id, user.id)
     if (!permit) {
       return Response.json({ status: 'failed', error: 'Permit not found' }, { status: 404 })
     }
+
+    const rate = await consumeRateLimit(
+      `analysis:${user.id}`,
+      limits.analysis.limit,
+      limits.analysis.windowMs
+    )
+    if (!rate.ok) return rateLimitResponse(rate)
 
     // Re-runs reuse previously extracted text instead of re-downloading the PDF.
     const alreadyExtracted =

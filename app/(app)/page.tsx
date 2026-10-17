@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/session";
 import Link from "next/link";
 import {
   listBuildingRecords,
@@ -19,7 +20,8 @@ import {
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const records = await listBuildingRecords();
+  const user = await requireUser();
+  const records = await listBuildingRecords(user.id);
   const recommendations = listRecommendationRecords(records);
   const scoredRecords = records.filter((record) => record.prediction);
   const processedPermits = records.filter((record) => record.permit.textExtraction).length;

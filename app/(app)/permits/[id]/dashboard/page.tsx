@@ -1,3 +1,4 @@
+import { requireUser } from "@/lib/session";
 import { notFound } from "next/navigation";
 import { AnalysisButton } from "@/components/AnalysisButton";
 import {
@@ -22,8 +23,9 @@ export default async function PermitDashboardPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const user = await requireUser();
   const [permit, profile, prediction] = await Promise.all([
-    getPermit(id),
+    getPermit(id, user.id),
     getBuildingProfile(id),
     getPrediction(id),
   ]);

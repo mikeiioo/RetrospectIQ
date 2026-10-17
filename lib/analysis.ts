@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 import { openaiApiKey } from './env'
-import { getPermit, updatePermit } from './permits'
+import { getPermitById, updatePermit } from './permits'
 import { upsertBuildingProfile, type BuildingProfile } from './building-profiles'
 
 export type AnalysisResult = {
@@ -77,7 +77,7 @@ function getClient(): OpenAI {
 }
 
 export async function analyzePermit(permitId: string): Promise<AnalysisResult> {
-  const permit = await getPermit(permitId)
+  const permit = await getPermitById(permitId)
   if (!permit) throw new Error(`Permit not found: ${permitId}`)
 
   if (!permit.rawText || permit.textExtraction?.status !== 'completed') {
