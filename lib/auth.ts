@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { nextCookies } from "better-auth/next-js";
+import { authBaseURL, authTrustedOrigins } from "./auth-urls";
 import { getMongoClientSync } from "./mongodb";
 
 export type SocialProviderId = "google";
@@ -21,6 +22,8 @@ function socialProviders() {
 const client = getMongoClientSync();
 
 export const auth = betterAuth({
+  baseURL: authBaseURL(),
+  trustedOrigins: authTrustedOrigins(),
   database: mongodbAdapter(client.db(), { client }),
   emailAndPassword: {
     enabled: true,
